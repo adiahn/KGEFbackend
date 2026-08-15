@@ -20,7 +20,8 @@ export function createApp() {
   app.use(express.urlencoded({ extended: true }));
 
   app.get("/api/health", (_req, res) => res.json({ status: "ok" }));
-  app.use("/uploads", express.static(path.join(__dirname, "..", "uploads")));
+  const uploadsDir = process.env.VERCEL ? "/tmp" : path.join(__dirname, "..", "uploads");
+  app.use("/uploads", express.static(uploadsDir));
   app.use("/api/applicants", applicantRoutes);
   app.use("/api/verify", verificationRoutes);
 

@@ -2,8 +2,14 @@ import multer from "multer";
 import path from "path";
 import fs from "fs";
 
-const uploadDir = path.join(__dirname, "..", "..", "uploads");
-if (!fs.existsSync(uploadDir)) {
+// On Vercel the deployment bundle is read-only except /tmp — writing (or even
+// mkdir'ing) anywhere else throws EROFS. /tmp works but is ephemeral and not
+// shared across function instances, so uploaded files won't reliably persist
+// or be servable back out. This keeps the app from crashing; real uploads on
+// Vercel need object storage (S3, Vercel Blob, Cloudinary, etc.) instead of
+// multer.diskStorage.
+const uploadDir = process.env.VERCEL ? "/tmp" : path.join(__dirname, "..", "..", "uploads");
+if (!process.env.VERCEL && !fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
 }
 
