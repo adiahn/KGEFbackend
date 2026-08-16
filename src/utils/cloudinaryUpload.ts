@@ -30,3 +30,16 @@ export function uploadBufferToCloudinary(
     stream.end(buffer);
   });
 }
+
+const CLOUDINARY_URL_PATTERN = /\/(image|video|raw)\/upload\/v\d+\/(.+)\.[a-zA-Z0-9]+(?:\?.*)?$/;
+
+export function deleteByCloudinaryUrl(url: string): Promise<void> {
+  const match = url.match(CLOUDINARY_URL_PATTERN);
+  if (!match) {
+    return Promise.reject(new Error("Not a recognizable Cloudinary URL"));
+  }
+  const [, resourceType, publicId] = match;
+  return getCloudinary()
+    .uploader.destroy(publicId, { resource_type: resourceType })
+    .then(() => undefined);
+}

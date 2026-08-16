@@ -3,46 +3,6 @@ import { Applicant } from "../models/Applicant";
 import { getNextApplicationNumber } from "../models/Counter";
 import { applicantInputSchema } from "../utils/validation";
 import { sendApplicationConfirmationEmail } from "../utils/mailer";
-import { isCloudinaryConfigured, uploadBufferToCloudinary } from "../utils/cloudinaryUpload";
-
-type UploadedFiles = Record<string, Express.Multer.File[]>;
-
-const DOCUMENT_FIELDS = [
-  "universityCertificate",
-  "kasedaCertificate",
-  "cacCertificate",
-  "tinCertificate",
-  "lgaIndigeneLetter",
-] as const;
-
-async function uploadApplicantDocuments(
-  files: UploadedFiles,
-  applicationNumber: string
-): Promise<Partial<Record<(typeof DOCUMENT_FIELDS)[number], string>>> {
-  if (!isCloudinaryConfigured()) {
-    console.warn("Cloudinary is not configured — document uploads will be skipped.");
-    return {};
-  }
-
-  const entries = await Promise.all(
-    DOCUMENT_FIELDS.map(async (field) => {
-      const file = files[field]?.[0];
-      if (!file) return [field, undefined] as const;
-      try {
-        const url = await uploadBufferToCloudinary(file.buffer, {
-          folder: `kgef-applications/${applicationNumber}`,
-          publicId: field,
-        });
-        return [field, url] as const;
-      } catch (err) {
-        console.error(`Failed to upload ${field} to Cloudinary:`, err);
-        return [field, undefined] as const;
-      }
-    })
-  );
-
-  return Object.fromEntries(entries.filter(([, url]) => url !== undefined));
-}
 
 export async function createApplicant(req: Request, res: Response) {
   const parsed = applicantInputSchema.safeParse(req.body);
@@ -51,10 +11,7 @@ export async function createApplicant(req: Request, res: Response) {
   }
 
   const applicationNumber = await getNextApplicationNumber();
-  const files = (req.files as UploadedFiles) || {};
-  const documents = await uploadApplicantDocuments(files, applicationNumber);
-
-  const applicant = await Applicant.create({ ...parsed.data, documents, applicationNumber });
+  const applicant = await Applicant.create({ ...parsed.data, applicationNumber });
 
   // Awaited (not fire-and-forget) because Vercel can freeze the function the
   // instant the response is sent — a "background" send after res.json()

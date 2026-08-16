@@ -5,6 +5,7 @@ import morgan from "morgan";
 import applicantRoutes from "./routes/applicant.routes";
 import verificationRoutes from "./routes/verification.routes";
 import trackingRoutes from "./routes/tracking.routes";
+import uploadRoutes from "./routes/upload.routes";
 
 export function createApp() {
   const app = express();
@@ -23,6 +24,7 @@ export function createApp() {
   app.use("/api/applicants", applicantRoutes);
   app.use("/api/verify", verificationRoutes);
   app.use("/api/track", trackingRoutes);
+  app.use("/api/uploads", uploadRoutes);
 
   app.use((req: Request, res: Response) => {
     res.status(404).json({ message: `Route ${req.method} ${req.path} not found` });

@@ -1,6 +1,17 @@
 import { z } from "zod";
 
+const documentsSchema = z
+  .object({
+    universityCertificate: z.string().url().optional(),
+    kasedaCertificate: z.string().url().optional(),
+    cacCertificate: z.string().url().optional(),
+    tinCertificate: z.string().url().optional(),
+    lgaIndigeneLetter: z.string().url().optional(),
+  })
+  .optional();
+
 export const applicantInputSchema = z.object({
+  documents: documentsSchema,
   fullName: z.string().min(1),
   gender: z.enum(["Male", "Female", "Prefer not to say"]),
   dateOfBirth: z.coerce.date(),
