@@ -1,6 +1,8 @@
 import { Schema, model, Document } from "mongoose";
 
 export interface IApplicant extends Document {
+  applicationNumber: string;
+
   // A. Applicant Bio-Data & Eligibility Verification
   fullName: string;
   gender: "Male" | "Female" | "Prefer not to say";
@@ -189,6 +191,7 @@ export interface IApplicant extends Document {
 
 const applicantSchema = new Schema<IApplicant>(
   {
+    applicationNumber: { type: String, required: true, unique: true, index: true },
     fullName: { type: String, required: true, trim: true },
     gender: { type: String, enum: ["Male", "Female", "Prefer not to say"], required: true },
     dateOfBirth: { type: Date, required: true },

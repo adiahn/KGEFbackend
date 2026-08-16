@@ -1,6 +1,8 @@
 import { Request, Response } from "express";
 import { Applicant } from "../models/Applicant";
+import { getNextApplicationNumber } from "../models/Counter";
 import { applicantInputSchema } from "../utils/validation";
+import { sendApplicationConfirmationEmail } from "../utils/mailer";
 
 type UploadedFiles = Record<string, Express.Multer.File[]>;
 
@@ -19,7 +21,19 @@ export async function createApplicant(req: Request, res: Response) {
     lgaIndigeneLetter: files.lgaIndigeneLetter?.[0]?.filename,
   };
 
-  const applicant = await Applicant.create({ ...parsed.data, documents });
+  const applicationNumber = await getNextApplicationNumber();
+  const applicant = await Applicant.create({ ...parsed.data, documents, applicationNumber });
+
+  // Awaited (not fire-and-forget) because Vercel can freeze the function the
+  // instant the response is sent — a "background" send after res.json()
+  // would not reliably complete. A failed email must not fail the
+  // submission itself, since the applicant's data is already saved.
+  try {
+    await sendApplicationConfirmationEmail(applicant);
+  } catch (err) {
+    console.error("Failed to send application confirmation email:", err);
+  }
+
   res.status(201).json(applicant);
 }
 
