@@ -6,6 +6,7 @@ import applicantRoutes from "./routes/applicant.routes";
 import verificationRoutes from "./routes/verification.routes";
 import trackingRoutes from "./routes/tracking.routes";
 import uploadRoutes from "./routes/upload.routes";
+import adminRoutes from "./routes/admin.routes";
 
 export function createApp() {
   const app = express();
@@ -25,6 +26,7 @@ export function createApp() {
   app.use("/api/verify", verificationRoutes);
   app.use("/api/track", trackingRoutes);
   app.use("/api/uploads", uploadRoutes);
+  app.use("/api/admin", adminRoutes);
 
   app.use((req: Request, res: Response) => {
     res.status(404).json({ message: `Route ${req.method} ${req.path} not found` });

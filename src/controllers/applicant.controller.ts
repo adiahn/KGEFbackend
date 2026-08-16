@@ -27,8 +27,14 @@ export async function createApplicant(req: Request, res: Response) {
 }
 
 export async function listApplicants(req: Request, res: Response) {
-  const { status } = req.query;
-  const filter = status ? { status } : {};
+  const { status, search } = req.query as { status?: string; search?: string };
+  const filter: Record<string, unknown> = {};
+  if (status) filter.status = status;
+  if (search?.trim()) {
+    const pattern = new RegExp(search.trim().replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "i");
+    filter.$or = [{ fullName: pattern }, { applicationNumber: pattern }, { email: pattern }];
+  }
+
   const applicants = await Applicant.find(filter).sort({ createdAt: -1 });
   res.json(applicants);
 }
