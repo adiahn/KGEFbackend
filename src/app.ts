@@ -2,7 +2,6 @@ import express, { Request, Response, NextFunction } from "express";
 import cors from "cors";
 import helmet from "helmet";
 import morgan from "morgan";
-import path from "path";
 import applicantRoutes from "./routes/applicant.routes";
 import verificationRoutes from "./routes/verification.routes";
 import trackingRoutes from "./routes/tracking.routes";
@@ -21,8 +20,6 @@ export function createApp() {
   app.use(express.urlencoded({ extended: true }));
 
   app.get("/api/health", (_req, res) => res.json({ status: "ok" }));
-  const uploadsDir = process.env.VERCEL ? "/tmp" : path.join(__dirname, "..", "uploads");
-  app.use("/uploads", express.static(uploadsDir));
   app.use("/api/applicants", applicantRoutes);
   app.use("/api/verify", verificationRoutes);
   app.use("/api/track", trackingRoutes);

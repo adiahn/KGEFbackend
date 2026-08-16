@@ -1,35 +1,12 @@
 import multer from "multer";
-import path from "path";
-import fs from "fs";
 
-// On Vercel the deployment bundle is read-only except /tmp — writing (or even
-// mkdir'ing) anywhere else throws EROFS. /tmp works but is ephemeral and not
-// shared across function instances, so uploaded files won't reliably persist
-// or be servable back out. This keeps the app from crashing; real uploads on
-// Vercel need object storage (S3, Vercel Blob, Cloudinary, etc.) instead of
-// multer.diskStorage.
-const uploadDir = process.env.VERCEL ? "/tmp" : path.join(__dirname, "..", "..", "uploads");
-if (!process.env.VERCEL && !fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
-}
-
-const storage = multer.diskStorage({
-  destination: (_req, _file, cb) => cb(null, uploadDir),
-  filename: (_req, file, cb) => {
-    const unique = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
-    cb(null, `${unique}${path.extname(file.originalname)}`);
-  },
-});
-
-const allowedMimeTypes = new Set([
-  "application/pdf",
-  "image/jpeg",
-  "image/png",
-  "image/jpg",
-]);
+// Files are kept in memory only, then streamed straight to Cloudinary in the
+// controller — nothing touches the local filesystem, so this works the same
+// way locally and on Vercel's read-only/ephemeral filesystem.
+const allowedMimeTypes = new Set(["application/pdf", "image/jpeg", "image/png", "image/jpg"]);
 
 export const upload = multer({
-  storage,
+  storage: multer.memoryStorage(),
   limits: { fileSize: 5 * 1024 * 1024 },
   fileFilter: (_req, file, cb) => {
     if (allowedMimeTypes.has(file.mimetype)) {
