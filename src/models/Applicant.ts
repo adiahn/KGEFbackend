@@ -185,6 +185,15 @@ export interface IApplicant extends Document {
   // Application meta
   status: "pending" | "under_review" | "approved" | "rejected";
   score?: number;
+  reviewNotes?: string;
+  decisionReason?: string;
+  documentVerification?: {
+    universityCertificate?: boolean;
+    kasedaCertificate?: boolean;
+    cacCertificate?: boolean;
+    tinCertificate?: boolean;
+    lgaIndigeneLetter?: boolean;
+  };
   createdAt: Date;
   updatedAt: Date;
 }
@@ -472,6 +481,15 @@ const applicantSchema = new Schema<IApplicant>(
       default: "pending",
     },
     score: { type: Number },
+    reviewNotes: { type: String, trim: true },
+    decisionReason: { type: String, trim: true },
+    documentVerification: {
+      universityCertificate: { type: Boolean, default: false },
+      kasedaCertificate: { type: Boolean, default: false },
+      cacCertificate: { type: Boolean, default: false },
+      tinCertificate: { type: Boolean, default: false },
+      lgaIndigeneLetter: { type: Boolean, default: false },
+    },
   },
   { timestamps: true }
 );

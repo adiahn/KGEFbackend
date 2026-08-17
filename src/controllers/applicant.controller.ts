@@ -47,18 +47,38 @@ export async function getApplicant(req: Request, res: Response) {
   res.json(applicant);
 }
 
+const DOCUMENT_FIELDS = [
+  "universityCertificate",
+  "kasedaCertificate",
+  "cacCertificate",
+  "tinCertificate",
+  "lgaIndigeneLetter",
+];
+
 export async function updateApplicantStatus(req: Request, res: Response) {
-  const { status, score } = req.body;
+  const { status, score, reviewNotes, decisionReason, documentVerification } = req.body;
   const allowedStatuses = ["pending", "under_review", "approved", "rejected"];
   if (status && !allowedStatuses.includes(status)) {
     return res.status(400).json({ message: "Invalid status value" });
   }
+  if ((status === "approved" || status === "rejected") && !decisionReason?.trim()) {
+    return res.status(400).json({ message: "A decision reason is required to approve or reject an application" });
+  }
 
-  const applicant = await Applicant.findByIdAndUpdate(
-    req.params.id,
-    { ...(status && { status }), ...(score !== undefined && { score }) },
-    { new: true }
-  );
+  const update: Record<string, unknown> = {};
+  if (status) update.status = status;
+  if (score !== undefined) update.score = score;
+  if (reviewNotes !== undefined) update.reviewNotes = reviewNotes;
+  if (decisionReason !== undefined) update.decisionReason = decisionReason;
+  if (documentVerification && typeof documentVerification === "object") {
+    for (const field of DOCUMENT_FIELDS) {
+      if (field in documentVerification) {
+        update[`documentVerification.${field}`] = Boolean(documentVerification[field]);
+      }
+    }
+  }
+
+  const applicant = await Applicant.findByIdAndUpdate(req.params.id, update, { new: true });
   if (!applicant) {
     return res.status(404).json({ message: "Applicant not found" });
   }
