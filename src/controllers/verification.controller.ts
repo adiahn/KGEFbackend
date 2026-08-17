@@ -4,7 +4,7 @@ import { Request, Response } from "express";
 // verification against NIMC (NIN), a licensed BVN provider, or the CAC registry
 // requires a commercial API agreement this project does not have credentials
 // for. Wire a real provider in here before relying on this for eligibility
-// decisions — do not treat `valid: true` as a confirmed identity/business match.
+// decisions. Do not treat `valid: true` as a confirmed identity/business match.
 
 const NIN_PATTERN = /^\d{11}$/;
 const BVN_PATTERN = /^\d{11}$/;

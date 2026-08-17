@@ -11,7 +11,7 @@ import { asyncHandler } from "../utils/asyncHandler";
 
 const router = Router();
 
-// Only creation is public — an applicant submits their own data once.
+// Only creation is public; an applicant submits their own data once.
 // Listing, viewing, updating, and deleting expose full PII (NIN, BVN, phone,
 // documents) for every applicant and are admin-only.
 router.post("/", asyncHandler(createApplicant));

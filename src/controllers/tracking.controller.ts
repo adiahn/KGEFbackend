@@ -59,12 +59,12 @@ export async function verifyOtp(req: Request, res: Response) {
 
   const otpRecord = await Otp.findOne({ applicationNumber: applicationNumber.trim() });
   if (!otpRecord) {
-    return res.status(400).json({ message: "Code expired or not found — request a new one" });
+    return res.status(400).json({ message: "Code expired or not found. Request a new one" });
   }
 
   if (otpRecord.attempts >= MAX_ATTEMPTS) {
     await otpRecord.deleteOne();
-    return res.status(429).json({ message: "Too many incorrect attempts — request a new code" });
+    return res.status(429).json({ message: "Too many incorrect attempts. Request a new code" });
   }
 
   if (hashOtpCode(code.trim()) !== otpRecord.codeHash) {

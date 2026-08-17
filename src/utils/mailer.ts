@@ -8,7 +8,7 @@ function getTransporter(): nodemailer.Transporter | null {
 
   const { SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS } = process.env;
   if (!SMTP_HOST || !SMTP_PORT || !SMTP_USER || !SMTP_PASS) {
-    console.warn("SMTP not configured — skipping confirmation emails.");
+    console.warn("SMTP not configured, skipping confirmation emails.");
     return null;
   }
 
@@ -60,7 +60,7 @@ function buildEmail(applicant: IApplicant) {
       <p style="color:#065f46;font-size:22px;font-weight:800;margin:0;letter-spacing:0.03em;">${applicant.applicationNumber}</p>
     </div>
     <p style="color:#334155;font-size:14px;line-height:1.6;margin:0 0 16px;">
-      Keep this number — you'll need it to track the status of your application.
+      Keep this number. You'll need it to track the status of your application.
     </p>
     <table style="width:100%;border-collapse:collapse;border-top:1px solid #e2e8f0;">
       ${rowsHtml}
@@ -71,7 +71,7 @@ function buildEmail(applicant: IApplicant) {
     </p>
   </div>
   <div style="padding:20px 32px;text-align:center;">
-    <p style="color:#94a3b8;font-size:12px;margin:0;">KGEF Graduate Start-Up Capital Fund — Funded and administered by KASEDA</p>
+    <p style="color:#94a3b8;font-size:12px;margin:0;">KGEF Graduate Start-Up Capital Fund, funded and administered by KASEDA</p>
   </div>
 </div>`.trim();
 
@@ -80,13 +80,13 @@ function buildEmail(applicant: IApplicant) {
 Thank you for applying to the KGEF Graduate Start-up Capital Fund. We've received your application and it is now pending review.
 
 Your Application Number: ${applicant.applicationNumber}
-Keep this number — you'll need it to track the status of your application.
+Keep this number. You'll need it to track the status of your application.
 
 ${rowsText}
 
 Our team will review your submission and reach out via this email or the phone number you provided with next steps.
 
-KGEF Graduate Start-Up Capital Fund — Funded and administered by KASEDA`;
+KGEF Graduate Start-Up Capital Fund, funded and administered by KASEDA`;
 
   return { html, text };
 }
@@ -100,7 +100,7 @@ export async function sendApplicationConfirmationEmail(applicant: IApplicant): P
   await client.sendMail({
     from: `"KGEF Graduate Start-Up Capital Fund" <${process.env.SMTP_USER}>`,
     to: applicant.email,
-    subject: `Application Received — ${applicant.applicationNumber}`,
+    subject: `Application Received: ${applicant.applicationNumber}`,
     text,
     html,
   });
@@ -114,7 +114,7 @@ export async function sendOtpEmail(params: {
 }): Promise<void> {
   const client = getTransporter();
   if (!client) {
-    throw new Error("Email service is not configured — cannot send verification code.");
+    throw new Error("Email service is not configured, cannot send verification code.");
   }
 
   const html = `
@@ -137,7 +137,7 @@ export async function sendOtpEmail(params: {
     </p>
   </div>
   <div style="padding:20px 32px;text-align:center;">
-    <p style="color:#94a3b8;font-size:12px;margin:0;">KGEF Graduate Start-Up Capital Fund — Funded and administered by KASEDA</p>
+    <p style="color:#94a3b8;font-size:12px;margin:0;">KGEF Graduate Start-Up Capital Fund, funded and administered by KASEDA</p>
   </div>
 </div>`.trim();
 
@@ -149,7 +149,7 @@ ${params.code}
 
 If you didn't request this code, you can safely ignore this email.
 
-KGEF Graduate Start-Up Capital Fund — Funded and administered by KASEDA`;
+KGEF Graduate Start-Up Capital Fund, funded and administered by KASEDA`;
 
   await client.sendMail({
     from: `"KGEF Graduate Start-Up Capital Fund" <${process.env.SMTP_USER}>`,

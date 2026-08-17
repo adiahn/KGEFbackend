@@ -14,7 +14,7 @@ export async function connectDB(): Promise<void> {
     throw new Error("MONGODB_URI is not set in the environment");
   }
 
-  // No MONGODB_URI configured (typical for a fresh local checkout) — spin up an
+  // No MONGODB_URI configured (typical for a fresh local checkout); spin up an
   // in-memory MongoDB automatically so `npm run dev` works with zero setup.
   // Data does not persist across restarts; set MONGODB_URI for real usage.
   const { MongoMemoryServer } = await import("mongodb-memory-server");
@@ -22,7 +22,7 @@ export async function connectDB(): Promise<void> {
   const uri = memoryServer.getUri();
 
   await mongoose.connect(uri);
-  console.log("MONGODB_URI not set — started an in-memory MongoDB for local development.");
+  console.log("MONGODB_URI not set, started an in-memory MongoDB for local development.");
   console.log("Data will not persist across restarts. Set MONGODB_URI in .env for a real database.");
 
   process.on("SIGINT", async () => {

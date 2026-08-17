@@ -24,6 +24,6 @@ export function requireAdminAuth(req: Request, res: Response, next: NextFunction
     }
     next();
   } catch {
-    return res.status(401).json({ message: "Session expired — please log in again" });
+    return res.status(401).json({ message: "Session expired, please log in again" });
   }
 }

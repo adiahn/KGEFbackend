@@ -31,6 +31,6 @@ export function requireTrackingAuth(req: Request, res: Response, next: NextFunct
     req.tracking = payload;
     next();
   } catch {
-    return res.status(401).json({ message: "Session expired — please verify again" });
+    return res.status(401).json({ message: "Session expired, please verify again" });
   }
 }

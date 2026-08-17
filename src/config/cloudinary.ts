@@ -1,8 +1,8 @@
 import { v2 as cloudinary } from "cloudinary";
 
 // Configured lazily (on first use) rather than at module-load time. ES import
-// declarations are hoisted above other top-level statements — including a
-// `dotenv.config()` call that textually precedes them — so reading
+// declarations are hoisted above other top-level statements, including a
+// `dotenv.config()` call that textually precedes them, so reading
 // process.env.CLOUDINARY_* at import time can run before .env is loaded.
 let configured = false;
 

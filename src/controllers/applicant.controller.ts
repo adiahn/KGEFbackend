@@ -14,7 +14,7 @@ export async function createApplicant(req: Request, res: Response) {
   const applicant = await Applicant.create({ ...parsed.data, applicationNumber });
 
   // Awaited (not fire-and-forget) because Vercel can freeze the function the
-  // instant the response is sent — a "background" send after res.json()
+  // instant the response is sent; a "background" send after res.json()
   // would not reliably complete. A failed email must not fail the
   // submission itself, since the applicant's data is already saved.
   try {

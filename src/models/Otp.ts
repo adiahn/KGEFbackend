@@ -16,7 +16,7 @@ const otpSchema = new Schema<IOtp>({
   lastSentAt: { type: Date, required: true },
 });
 
-// TTL index — Mongo automatically deletes the document once expiresAt passes,
+// TTL index: Mongo automatically deletes the document once expiresAt passes,
 // so stale/expired OTPs never linger.
 otpSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
 
