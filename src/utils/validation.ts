@@ -118,6 +118,8 @@ export const applicantInputSchema = z.object({
   ]),
 
   workExperience: z.enum(["Yes", "No"]),
+  employerName: z.string().optional(),
+  employerPosition: z.string().optional(),
   workExperienceYears: z.coerce.number().int().min(0).optional(),
   entrepreneurshipTraining: z.enum([
     "No formal training",

@@ -110,6 +110,8 @@ export interface IApplicant extends Document {
 
   // F. Applicant Capacity
   workExperience: "Yes" | "No";
+  employerName?: string;
+  employerPosition?: string;
   workExperienceYears?: number;
   entrepreneurshipTraining:
     | "No formal training"
@@ -355,6 +357,8 @@ const applicantSchema = new Schema<IApplicant>(
       enum: ["Yes", "No"],
       required: true,
     },
+    employerName: { type: String, trim: true },
+    employerPosition: { type: String, trim: true },
     workExperienceYears: { type: Number, min: 0 },
     entrepreneurshipTraining: {
       type: String,
