@@ -100,11 +100,6 @@ export interface IApplicant extends Document {
     | "₦400,000"
     | "₦500,000"
     | "Above ₦500,000";
-  preferredFundingType:
-    | "Seed grant only"
-    | "Soft loan only"
-    | "Combination of both"
-    | "Undecided";
   disbursementPreference:
     | "100% upfront"
     | "70% upfront, 30% after 3 months"
@@ -112,11 +107,8 @@ export interface IApplicant extends Document {
     | "Phased based on milestones";
 
   // F. Applicant Capacity
-  workExperience:
-    | "No relevant experience"
-    | "1-2 years in related field"
-    | "3-5 years in related field"
-    | "5+ years in related field";
+  workExperience: "Yes" | "No";
+  workExperienceYears?: number;
   entrepreneurshipTraining:
     | "No formal training"
     | "School entrepreneurship course"
@@ -342,11 +334,6 @@ const applicantSchema = new Schema<IApplicant>(
       ],
       required: true,
     },
-    preferredFundingType: {
-      type: String,
-      enum: ["Seed grant only", "Soft loan only", "Combination of both", "Undecided"],
-      required: true,
-    },
     disbursementPreference: {
       type: String,
       enum: [
@@ -360,14 +347,10 @@ const applicantSchema = new Schema<IApplicant>(
 
     workExperience: {
       type: String,
-      enum: [
-        "No relevant experience",
-        "1-2 years in related field",
-        "3-5 years in related field",
-        "5+ years in related field",
-      ],
+      enum: ["Yes", "No"],
       required: true,
     },
+    workExperienceYears: { type: Number, min: 0 },
     entrepreneurshipTraining: {
       type: String,
       enum: [

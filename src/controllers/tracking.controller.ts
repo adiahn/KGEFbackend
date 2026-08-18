@@ -106,7 +106,6 @@ export async function getMe(req: Request, res: Response) {
     email: applicant.email,
     businessSector: applicant.businessSector,
     requestedAmount: applicant.requestedAmount,
-    preferredFundingType: applicant.preferredFundingType,
     status: applicant.status,
     createdAt: applicant.createdAt,
     updatedAt: applicant.updatedAt,

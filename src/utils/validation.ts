@@ -108,12 +108,6 @@ export const applicantInputSchema = z.object({
     "₦500,000",
     "Above ₦500,000",
   ]),
-  preferredFundingType: z.enum([
-    "Seed grant only",
-    "Soft loan only",
-    "Combination of both",
-    "Undecided",
-  ]),
   disbursementPreference: z.enum([
     "100% upfront",
     "70% upfront, 30% after 3 months",
@@ -121,12 +115,8 @@ export const applicantInputSchema = z.object({
     "Phased based on milestones",
   ]),
 
-  workExperience: z.enum([
-    "No relevant experience",
-    "1-2 years in related field",
-    "3-5 years in related field",
-    "5+ years in related field",
-  ]),
+  workExperience: z.enum(["Yes", "No"]),
+  workExperienceYears: z.coerce.number().int().min(0).optional(),
   entrepreneurshipTraining: z.enum([
     "No formal training",
     "School entrepreneurship course",

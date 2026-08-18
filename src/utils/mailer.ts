@@ -26,22 +26,83 @@ function formatDate(date: Date): string {
 }
 
 function buildEmail(applicant: IApplicant) {
-  const details: [string, string][] = [
-    ["Application Number", applicant.applicationNumber],
-    ["Business Sector", applicant.businessSector],
-    ["Requested Amount", applicant.requestedAmount],
-    ["Preferred Funding Type", applicant.preferredFundingType],
-    ["Submitted On", formatDate(applicant.createdAt)],
+  const sections: [string, [string, string][]][] = [
+    [
+      "Personal & Contact",
+      [
+        ["Full Name", applicant.fullName],
+        ["Gender", applicant.gender],
+        ["Date of Birth", formatDate(applicant.dateOfBirth)],
+        ["Phone", applicant.phone],
+        ["Email", applicant.email],
+        ["Address", applicant.address],
+        ["Local Government of Origin", applicant.lgaOfOrigin],
+      ],
+    ],
+    [
+      "Education",
+      [
+        ["Institution", applicant.institution],
+        ["Program", applicant.program],
+        ["Graduation Year", String(applicant.graduationYear)],
+        ["Educational Qualification", applicant.educationalQualification],
+      ],
+    ],
+    [
+      "Identification",
+      [
+        ["NIN", applicant.nin],
+        ["BVN", applicant.bvn],
+        ...(applicant.cacCertificateNumber
+          ? ([["CAC Certificate Number", applicant.cacCertificateNumber]] as [string, string][])
+          : []),
+      ],
+    ],
+    [
+      "Business",
+      [
+        ["Business Sector", applicant.businessSector],
+        ["Business Stage", applicant.businessStage],
+        ["Legal Structure", applicant.legalStructure],
+      ],
+    ],
+    [
+      "Funding Request",
+      [
+        ["Requested Amount", applicant.requestedAmount],
+        ["Funding Type", "Interest-Free Loan"],
+        ["Disbursement Preference", applicant.disbursementPreference],
+      ],
+    ],
+    [
+      "Guarantor",
+      [
+        ["Guarantor Type", applicant.guarantorType],
+        ["Guarantor Relationship", applicant.guarantorRelationship],
+      ],
+    ],
+    ["Submission", [["Submitted On", formatDate(applicant.createdAt)]]],
   ];
 
-  const rowsHtml = details
+  const rowsHtml = sections
     .map(
-      ([label, value]) =>
-        `<tr><td style="padding:8px 0;color:#64748b;font-size:13px;">${label}</td><td style="padding:8px 0;color:#0f172a;font-size:13px;font-weight:600;text-align:right;">${value}</td></tr>`
+      ([sectionTitle, rows]) =>
+        `<tr><td colspan="2" style="padding:16px 0 6px;color:#065f46;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;">${sectionTitle}</td></tr>` +
+        rows
+          .map(
+            ([label, value]) =>
+              `<tr><td style="padding:6px 0;color:#64748b;font-size:13px;">${label}</td><td style="padding:6px 0;color:#0f172a;font-size:13px;font-weight:600;text-align:right;">${value}</td></tr>`
+          )
+          .join("")
     )
     .join("");
 
-  const rowsText = details.map(([label, value]) => `${label}: ${value}`).join("\n");
+  const rowsText = sections
+    .map(
+      ([sectionTitle, rows]) =>
+        `${sectionTitle}\n${rows.map(([label, value]) => `  ${label}: ${value}`).join("\n")}`
+    )
+    .join("\n\n");
 
   const html = `
 <div style="font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;max-width:520px;margin:0 auto;background:#ffffff;">
