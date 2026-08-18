@@ -3,6 +3,7 @@ import { uploadBufferToCloudinary, deleteByCloudinaryUrl, isCloudinaryConfigured
 
 const DOCUMENT_TYPES = new Set([
   "universityCertificate",
+  "schoolResult",
   "kasedaCertificate",
   "cacCertificate",
   "tinCertificate",

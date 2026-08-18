@@ -3,6 +3,7 @@ import { z } from "zod";
 const documentsSchema = z
   .object({
     universityCertificate: z.string().url().optional(),
+    schoolResult: z.string().url().optional(),
     kasedaCertificate: z.string().url().optional(),
     cacCertificate: z.string().url().optional(),
     tinCertificate: z.string().url().optional(),
@@ -28,6 +29,7 @@ export const applicantInputSchema = z.object({
   certificateAvailable: z.enum(["Yes", "No"]),
   educationalQualification: z.enum(["Degree", "NCE", "Diploma", "Other"]),
   educationalQualificationOther: z.string().optional(),
+  grade: z.string().min(1),
   studentIdNumber: z.string().optional(),
   nin: z.string().min(1),
   bvn: z.string().min(1),

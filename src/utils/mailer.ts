@@ -46,6 +46,7 @@ function buildEmail(applicant: IApplicant) {
         ["Program", applicant.program],
         ["Graduation Year", String(applicant.graduationYear)],
         ["Educational Qualification", applicant.educationalQualification],
+        ["Grade", applicant.grade],
       ],
     ],
     [
