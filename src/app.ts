@@ -12,11 +12,13 @@ export function createApp() {
   const app = express();
 
   app.use(helmet());
-  app.use(
-    cors({
-      origin: process.env.CLIENT_ORIGIN?.split(",") ?? "*",
-    })
-  );
+  // Open to any origin: this API has no cookie/session-based auth to protect
+  // (the admin route is a bearer JWT returned in the response body, not an
+  // ambient cookie), so an origin allowlist here was blocking legitimate
+  // custom domains without adding any real protection, since a browser is
+  // not the only way to call this API. CORS restrictions are for browsers
+  // specifically; a direct/server-side request bypasses them entirely.
+  app.use(cors());
   app.use(morgan("dev"));
   app.use(express.json());
   app.use(express.urlencoded({ extended: true }));
