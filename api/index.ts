@@ -5,7 +5,7 @@ dotenv.config();
 import { createApp } from "../src/app";
 import { connectDB } from "../src/config/db";
 
-// Reused across warm invocations of the same function instance — connecting
+// Reused across warm invocations of the same function instance: connecting
 // once per cold start (not per request) avoids exhausting the Atlas
 // connection pool. Mongoose itself manages pooling once connected.
 let connectionPromise: Promise<void> | null = null;
