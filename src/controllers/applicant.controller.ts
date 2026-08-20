@@ -49,7 +49,6 @@ export async function getApplicant(req: Request, res: Response) {
 
 const DOCUMENT_FIELDS = [
   "universityCertificate",
-  "schoolResult",
   "kasedaCertificate",
   "cacCertificate",
   "tinCertificate",

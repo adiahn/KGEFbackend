@@ -28,7 +28,6 @@ export interface IApplicant extends Document {
 
   documents: {
     universityCertificate?: string;
-    schoolResult?: string;
     kasedaCertificate?: string;
     cacCertificate?: string;
     tinCertificate?: string;
@@ -185,7 +184,6 @@ export interface IApplicant extends Document {
   decisionReason?: string;
   documentVerification?: {
     universityCertificate?: boolean;
-    schoolResult?: boolean;
     kasedaCertificate?: boolean;
     cacCertificate?: boolean;
     tinCertificate?: boolean;
@@ -226,7 +224,6 @@ const applicantSchema = new Schema<IApplicant>(
 
     documents: {
       universityCertificate: { type: String },
-      schoolResult: { type: String },
       kasedaCertificate: { type: String },
       cacCertificate: { type: String },
       tinCertificate: { type: String },
@@ -477,7 +474,6 @@ const applicantSchema = new Schema<IApplicant>(
     decisionReason: { type: String, trim: true },
     documentVerification: {
       universityCertificate: { type: Boolean, default: false },
-      schoolResult: { type: Boolean, default: false },
       kasedaCertificate: { type: Boolean, default: false },
       cacCertificate: { type: Boolean, default: false },
       tinCertificate: { type: Boolean, default: false },

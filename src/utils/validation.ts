@@ -3,7 +3,6 @@ import { z } from "zod";
 const documentsSchema = z
   .object({
     universityCertificate: z.string().url().optional(),
-    schoolResult: z.string().url().optional(),
     kasedaCertificate: z.string().url().optional(),
     cacCertificate: z.string().url().optional(),
     tinCertificate: z.string().url().optional(),
