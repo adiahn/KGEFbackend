@@ -3,8 +3,19 @@ import { Applicant } from "../models/Applicant";
 import { getNextApplicationNumber } from "../models/Counter";
 import { applicantInputSchema } from "../utils/validation";
 import { sendApplicationConfirmationEmail } from "../utils/mailer";
+import { APPLICATION_CLOSE_DATE, isApplicationWindowClosed } from "../utils/applicationWindow";
+
+export async function getApplicationWindow(_req: Request, res: Response) {
+  res.json({ closed: isApplicationWindowClosed(), closesAt: APPLICATION_CLOSE_DATE.toISOString() });
+}
 
 export async function createApplicant(req: Request, res: Response) {
+  if (isApplicationWindowClosed()) {
+    return res.status(403).json({
+      message: "Applications for KGEF closed on 11 September 2026 and are no longer being accepted.",
+    });
+  }
+
   const parsed = applicantInputSchema.safeParse(req.body);
   if (!parsed.success) {
     return res.status(400).json({ message: "Validation failed", errors: parsed.error.flatten() });
@@ -27,16 +38,47 @@ export async function createApplicant(req: Request, res: Response) {
 }
 
 export async function listApplicants(req: Request, res: Response) {
-  const { status, search } = req.query as { status?: string; search?: string };
+  const { status, search, grade, page, limit } = req.query as {
+    status?: string;
+    search?: string;
+    grade?: string;
+    page?: string;
+    limit?: string;
+  };
   const filter: Record<string, unknown> = {};
   if (status) filter.status = status;
+  if (grade) filter.grade = grade;
   if (search?.trim()) {
     const pattern = new RegExp(search.trim().replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "i");
     filter.$or = [{ fullName: pattern }, { applicationNumber: pattern }, { email: pattern }];
   }
 
-  const applicants = await Applicant.find(filter).sort({ createdAt: -1 });
-  res.json(applicants);
+  const pageNum = Math.max(1, parseInt(page ?? "1", 10) || 1);
+  const limitNum = Math.min(100, Math.max(1, parseInt(limit ?? "25", 10) || 25));
+
+  const [data, total] = await Promise.all([
+    Applicant.find(filter)
+      .sort({ createdAt: -1 })
+      .skip((pageNum - 1) * limitNum)
+      .limit(limitNum),
+    Applicant.countDocuments(filter),
+  ]);
+
+  res.json({ data, page: pageNum, limit: limitNum, total, totalPages: Math.max(1, Math.ceil(total / limitNum)) });
+}
+
+export async function getApplicantCounts(_req: Request, res: Response) {
+  const grouped = await Applicant.aggregate<{ _id: string; count: number }>([
+    { $group: { _id: "$status", count: { $sum: 1 } } },
+  ]);
+
+  const counts = { pending: 0, under_review: 0, approved: 0, rejected: 0, total: 0 };
+  for (const g of grouped) {
+    if (g._id in counts) counts[g._id as keyof typeof counts] = g.count;
+    counts.total += g.count;
+  }
+
+  res.json(counts);
 }
 
 export async function getApplicant(req: Request, res: Response) {

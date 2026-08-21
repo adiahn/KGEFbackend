@@ -96,10 +96,15 @@ export interface IApplicant extends Document {
 
   // D. KGEF Funding Request
   requestedAmount:
+    | "₦50,000"
     | "₦100,000 (Base loan tier)"
+    | "₦150,000"
     | "₦200,000"
+    | "₦250,000"
     | "₦300,000"
+    | "₦350,000"
     | "₦400,000"
+    | "₦450,000"
     | "₦500,000"
     | "Above ₦500,000";
   disbursementPreference:
@@ -331,10 +336,15 @@ const applicantSchema = new Schema<IApplicant>(
     requestedAmount: {
       type: String,
       enum: [
+        "₦50,000",
         "₦100,000 (Base loan tier)",
+        "₦150,000",
         "₦200,000",
+        "₦250,000",
         "₦300,000",
+        "₦350,000",
         "₦400,000",
+        "₦450,000",
         "₦500,000",
         "Above ₦500,000",
       ],
