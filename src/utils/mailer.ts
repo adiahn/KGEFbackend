@@ -54,6 +54,7 @@ function buildEmail(applicant: IApplicant) {
       [
         ["NIN", applicant.nin],
         ["BVN", applicant.bvn],
+        ["TIN", applicant.tin],
         ...(applicant.cacCertificateNumber
           ? ([["CAC Certificate Number", applicant.cacCertificateNumber]] as [string, string][])
           : []),

@@ -6,7 +6,6 @@ const DOCUMENT_TYPES = new Set([
   "kasedaCertificate",
   "cacCertificate",
   "cacStatusReport",
-  "tinCertificate",
   "lgaIndigeneLetter",
 ]);
 

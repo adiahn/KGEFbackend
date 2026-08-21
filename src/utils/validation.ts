@@ -6,7 +6,6 @@ const documentsSchema = z
     kasedaCertificate: z.string().url().optional(),
     cacCertificate: z.string().url().optional(),
     cacStatusReport: z.string().url().optional(),
-    tinCertificate: z.string().url().optional(),
     lgaIndigeneLetter: z.string().url().optional(),
   })
   .optional();
@@ -34,6 +33,7 @@ export const applicantInputSchema = z.object({
   nin: z.string().min(1),
   bvn: z.string().min(1),
   cacCertificateNumber: z.string().optional(),
+  tin: z.string().min(1),
 
   businessSector: z.enum([
     "Agribusiness (crop farming, livestock, fisheries)",

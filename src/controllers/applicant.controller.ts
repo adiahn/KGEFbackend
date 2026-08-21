@@ -52,7 +52,6 @@ const DOCUMENT_FIELDS = [
   "kasedaCertificate",
   "cacCertificate",
   "cacStatusReport",
-  "tinCertificate",
   "lgaIndigeneLetter",
 ];
 

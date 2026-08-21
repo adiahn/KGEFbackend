@@ -25,13 +25,13 @@ export interface IApplicant extends Document {
   nin: string;
   bvn: string;
   cacCertificateNumber?: string;
+  tin: string;
 
   documents: {
     universityCertificate?: string;
     kasedaCertificate?: string;
     cacCertificate?: string;
     cacStatusReport?: string;
-    tinCertificate?: string;
     lgaIndigeneLetter?: string;
   };
 
@@ -188,7 +188,6 @@ export interface IApplicant extends Document {
     kasedaCertificate?: boolean;
     cacCertificate?: boolean;
     cacStatusReport?: boolean;
-    tinCertificate?: boolean;
     lgaIndigeneLetter?: boolean;
   };
   createdAt: Date;
@@ -223,13 +222,13 @@ const applicantSchema = new Schema<IApplicant>(
     nin: { type: String, required: true, trim: true },
     bvn: { type: String, required: true, trim: true },
     cacCertificateNumber: { type: String, trim: true },
+    tin: { type: String, required: true, trim: true },
 
     documents: {
       universityCertificate: { type: String },
       kasedaCertificate: { type: String },
       cacCertificate: { type: String },
       cacStatusReport: { type: String },
-      tinCertificate: { type: String },
       lgaIndigeneLetter: { type: String },
     },
 
@@ -480,7 +479,6 @@ const applicantSchema = new Schema<IApplicant>(
       kasedaCertificate: { type: Boolean, default: false },
       cacCertificate: { type: Boolean, default: false },
       cacStatusReport: { type: Boolean, default: false },
-      tinCertificate: { type: Boolean, default: false },
       lgaIndigeneLetter: { type: Boolean, default: false },
     },
   },
