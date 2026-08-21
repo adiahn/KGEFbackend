@@ -54,11 +54,13 @@ export async function listApplicants(req: Request, res: Response) {
   }
 
   const pageNum = Math.max(1, parseInt(page ?? "1", 10) || 1);
-  const limitNum = Math.min(100, Math.max(1, parseInt(limit ?? "25", 10) || 25));
+  const limitNum = Math.min(100, Math.max(1, parseInt(limit ?? "30", 10) || 30));
 
   const [data, total] = await Promise.all([
+    // Oldest first: whoever applied first appears first, matching the
+    // first-come-first-served ordering the fund is reviewed in.
     Applicant.find(filter)
-      .sort({ createdAt: -1 })
+      .sort({ createdAt: 1 })
       .skip((pageNum - 1) * limitNum)
       .limit(limitNum),
     Applicant.countDocuments(filter),
@@ -97,8 +99,19 @@ const DOCUMENT_FIELDS = [
   "lgaIndigeneLetter",
 ];
 
+const ALLOWED_GRADES = [
+  "First Class",
+  "Second Class Upper",
+  "Second Class Lower",
+  "Third Class",
+  "Distinction",
+  "Merit",
+  "Credit",
+  "Pass",
+];
+
 export async function updateApplicantStatus(req: Request, res: Response) {
-  const { status, score, reviewNotes, decisionReason, documentVerification } = req.body;
+  const { status, score, reviewNotes, decisionReason, grade, documentVerification } = req.body;
   const allowedStatuses = ["pending", "under_review", "approved", "rejected"];
   if (status && !allowedStatuses.includes(status)) {
     return res.status(400).json({ message: "Invalid status value" });
@@ -106,12 +119,16 @@ export async function updateApplicantStatus(req: Request, res: Response) {
   if ((status === "approved" || status === "rejected") && !decisionReason?.trim()) {
     return res.status(400).json({ message: "A decision reason is required to approve or reject an application" });
   }
+  if (grade !== undefined && !ALLOWED_GRADES.includes(grade)) {
+    return res.status(400).json({ message: "Invalid grade value" });
+  }
 
   const update: Record<string, unknown> = {};
   if (status) update.status = status;
   if (score !== undefined) update.score = score;
   if (reviewNotes !== undefined) update.reviewNotes = reviewNotes;
   if (decisionReason !== undefined) update.decisionReason = decisionReason;
+  if (grade !== undefined) update.grade = grade;
   if (documentVerification && typeof documentVerification === "object") {
     for (const field of DOCUMENT_FIELDS) {
       if (field in documentVerification) {
