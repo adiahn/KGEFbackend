@@ -51,6 +51,7 @@ const DOCUMENT_FIELDS = [
   "universityCertificate",
   "kasedaCertificate",
   "cacCertificate",
+  "cacStatusReport",
   "tinCertificate",
   "lgaIndigeneLetter",
 ];

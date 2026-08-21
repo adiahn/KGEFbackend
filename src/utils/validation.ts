@@ -5,6 +5,7 @@ const documentsSchema = z
     universityCertificate: z.string().url().optional(),
     kasedaCertificate: z.string().url().optional(),
     cacCertificate: z.string().url().optional(),
+    cacStatusReport: z.string().url().optional(),
     tinCertificate: z.string().url().optional(),
     lgaIndigeneLetter: z.string().url().optional(),
   })

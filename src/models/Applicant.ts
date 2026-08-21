@@ -30,6 +30,7 @@ export interface IApplicant extends Document {
     universityCertificate?: string;
     kasedaCertificate?: string;
     cacCertificate?: string;
+    cacStatusReport?: string;
     tinCertificate?: string;
     lgaIndigeneLetter?: string;
   };
@@ -186,6 +187,7 @@ export interface IApplicant extends Document {
     universityCertificate?: boolean;
     kasedaCertificate?: boolean;
     cacCertificate?: boolean;
+    cacStatusReport?: boolean;
     tinCertificate?: boolean;
     lgaIndigeneLetter?: boolean;
   };
@@ -226,6 +228,7 @@ const applicantSchema = new Schema<IApplicant>(
       universityCertificate: { type: String },
       kasedaCertificate: { type: String },
       cacCertificate: { type: String },
+      cacStatusReport: { type: String },
       tinCertificate: { type: String },
       lgaIndigeneLetter: { type: String },
     },
@@ -476,6 +479,7 @@ const applicantSchema = new Schema<IApplicant>(
       universityCertificate: { type: Boolean, default: false },
       kasedaCertificate: { type: Boolean, default: false },
       cacCertificate: { type: Boolean, default: false },
+      cacStatusReport: { type: Boolean, default: false },
       tinCertificate: { type: Boolean, default: false },
       lgaIndigeneLetter: { type: Boolean, default: false },
     },
