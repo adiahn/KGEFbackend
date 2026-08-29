@@ -9,6 +9,7 @@ import {
   deleteApplicant,
 } from "../controllers/applicant.controller";
 import { requireAdminAuth } from "../middleware/adminAuth";
+import { strictLimiter } from "../middleware/rateLimit";
 import { asyncHandler } from "../utils/asyncHandler";
 
 const router = Router();
@@ -16,7 +17,7 @@ const router = Router();
 // Only creation is public; an applicant submits their own data once.
 // Listing, viewing, updating, and deleting expose full PII (NIN, BVN, phone,
 // documents) for every applicant and are admin-only.
-router.post("/", asyncHandler(createApplicant));
+router.post("/", strictLimiter, asyncHandler(createApplicant));
 // Must come before /:id so these aren't captured as an id param.
 router.get("/window", asyncHandler(getApplicationWindow));
 router.get("/", requireAdminAuth, asyncHandler(listApplicants));
