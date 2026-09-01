@@ -21,7 +21,16 @@ function ensureDbConnected(): Promise<void> {
 
 const app = createApp();
 
+// Routes that never touch Mongoose (health check, Cloudinary signature
+// issuance/delete) must not be blocked by a slow or failing DB connection —
+// gating them here would turn an unrelated Mongo outage into a total outage
+// for uploads too.
+const DB_FREE_PREFIXES = ["/api/health", "/api/uploads"];
+
 export default async function handler(req: IncomingMessage, res: ServerResponse) {
-  await ensureDbConnected();
+  const path = (req.url || "").split("?")[0];
+  if (!DB_FREE_PREFIXES.some((prefix) => path.startsWith(prefix))) {
+    await ensureDbConnected();
+  }
   return app(req, res);
 }
