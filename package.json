@@ -7,7 +7,10 @@
     "dev": "tsx watch src/index.ts",
     "build": "tsc -p tsconfig.json",
     "start": "node dist/src/index.js",
-    "lint": "tsc --noEmit"
+    "lint": "tsc --noEmit",
+    "migrate:dry-run": "tsx scripts/migrateCloudinary.ts dry-run",
+    "migrate:run": "tsx scripts/migrateCloudinary.ts migrate",
+    "migrate:apply-db": "tsx scripts/migrateCloudinary.ts apply-db"
   },
   "dependencies": {
     "cloudinary": "^2.10.0",
