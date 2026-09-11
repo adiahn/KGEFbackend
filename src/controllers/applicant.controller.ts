@@ -12,7 +12,7 @@ export async function getApplicationWindow(_req: Request, res: Response) {
 export async function createApplicant(req: Request, res: Response) {
   if (isApplicationWindowClosed()) {
     return res.status(403).json({
-      message: "Applications for KGEF closed on 11 September 2026 and are no longer being accepted.",
+      message: "Applications for KGEF closed on 12 September 2026 and are no longer being accepted.",
     });
   }
 
