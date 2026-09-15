@@ -7,3 +7,4 @@ uploads/*
 .vercel
 .env*
 migration-output/
+preselect-output/

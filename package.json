@@ -10,7 +10,11 @@
     "lint": "tsc --noEmit",
     "migrate:dry-run": "tsx scripts/migrateCloudinary.ts dry-run",
     "migrate:run": "tsx scripts/migrateCloudinary.ts migrate",
-    "migrate:apply-db": "tsx scripts/migrateCloudinary.ts apply-db"
+    "migrate:apply-db": "tsx scripts/migrateCloudinary.ts apply-db",
+    "preselect:classify": "tsx scripts/preSelectApplicants.ts classify",
+    "preselect:promote": "tsx scripts/preSelectApplicants.ts promote",
+    "preselect:delete-docs": "tsx scripts/preSelectApplicants.ts delete-docs",
+    "preselect:disqualify-db": "tsx scripts/preSelectApplicants.ts disqualify-db"
   },
   "dependencies": {
     "cloudinary": "^2.10.0",

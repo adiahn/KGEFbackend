@@ -107,6 +107,7 @@ export async function getMe(req: Request, res: Response) {
     businessSector: applicant.businessSector,
     requestedAmount: applicant.requestedAmount,
     status: applicant.status,
+    decisionReason: applicant.decisionReason,
     createdAt: applicant.createdAt,
     updatedAt: applicant.updatedAt,
   });

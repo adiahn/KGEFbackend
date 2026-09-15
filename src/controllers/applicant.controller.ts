@@ -4,6 +4,8 @@ import { getNextApplicationNumber } from "../models/Counter";
 import { applicantInputSchema } from "../utils/validation";
 import { sendApplicationConfirmationEmail } from "../utils/mailer";
 import { APPLICATION_CLOSE_DATE, isApplicationWindowClosed } from "../utils/applicationWindow";
+import { isQualifyingGrade, DISQUALIFICATION_REASON } from "../utils/preSelection";
+import { deleteByCloudinaryUrl } from "../utils/cloudinaryUpload";
 
 export async function getApplicationWindow(_req: Request, res: Response) {
   res.json({ closed: isApplicationWindowClosed(), closesAt: APPLICATION_CLOSE_DATE.toISOString() });
@@ -23,6 +25,30 @@ export async function createApplicant(req: Request, res: Response) {
 
   const applicationNumber = await getNextApplicationNumber();
   const applicant = await Applicant.create({ ...parsed.data, applicationNumber });
+
+  // Grade-based pre-selection happens immediately on submission: qualifying
+  // applicants move straight to the pre-selected pool for admin review;
+  // everyone else is auto-disqualified and their already-uploaded documents
+  // are removed, since a disqualified application will never need them and
+  // there's no reason to keep paying to store them.
+  if (isQualifyingGrade(applicant.grade)) {
+    applicant.status = "pre_selected";
+  } else {
+    applicant.status = "disqualified";
+    applicant.decisionReason = DISQUALIFICATION_REASON;
+    const documents = applicant.documents ?? {};
+    await Promise.all(
+      Object.values(documents)
+        .filter((url): url is string => Boolean(url))
+        .map((url) =>
+          deleteByCloudinaryUrl(url).catch((err) =>
+            console.error(`Failed to delete document for disqualified applicant ${applicant.applicationNumber}:`, err)
+          )
+        )
+    );
+    applicant.documents = {};
+  }
+  await applicant.save();
 
   // Awaited (not fire-and-forget) because Vercel can freeze the function the
   // instant the response is sent; a "background" send after res.json()
@@ -74,7 +100,15 @@ export async function getApplicantCounts(_req: Request, res: Response) {
     { $group: { _id: "$status", count: { $sum: 1 } } },
   ]);
 
-  const counts = { pending: 0, under_review: 0, approved: 0, rejected: 0, total: 0 };
+  const counts = {
+    pending: 0,
+    pre_selected: 0,
+    disqualified: 0,
+    under_review: 0,
+    approved: 0,
+    rejected: 0,
+    total: 0,
+  };
   for (const g of grouped) {
     if (g._id in counts) counts[g._id as keyof typeof counts] = g.count;
     counts.total += g.count;
@@ -112,12 +146,12 @@ const ALLOWED_GRADES = [
 
 export async function updateApplicantStatus(req: Request, res: Response) {
   const { status, score, reviewNotes, decisionReason, grade, documentVerification } = req.body;
-  const allowedStatuses = ["pending", "under_review", "approved", "rejected"];
+  const allowedStatuses = ["pending", "pre_selected", "disqualified", "under_review", "approved", "rejected"];
   if (status && !allowedStatuses.includes(status)) {
     return res.status(400).json({ message: "Invalid status value" });
   }
-  if ((status === "approved" || status === "rejected") && !decisionReason?.trim()) {
-    return res.status(400).json({ message: "A decision reason is required to approve or reject an application" });
+  if ((status === "approved" || status === "rejected" || status === "disqualified") && !decisionReason?.trim()) {
+    return res.status(400).json({ message: "A decision reason is required for this status" });
   }
   if (grade !== undefined && !ALLOWED_GRADES.includes(grade)) {
     return res.status(400).json({ message: "Invalid grade value" });

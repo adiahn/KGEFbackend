@@ -184,7 +184,7 @@ export interface IApplicant extends Document {
     | "Above ₦500,000";
 
   // Application meta
-  status: "pending" | "under_review" | "approved" | "rejected";
+  status: "pending" | "pre_selected" | "disqualified" | "under_review" | "approved" | "rejected";
   score?: number;
   reviewNotes?: string;
   decisionReason?: string;
@@ -478,7 +478,7 @@ const applicantSchema = new Schema<IApplicant>(
 
     status: {
       type: String,
-      enum: ["pending", "under_review", "approved", "rejected"],
+      enum: ["pending", "pre_selected", "disqualified", "under_review", "approved", "rejected"],
       default: "pending",
     },
     score: { type: Number },
