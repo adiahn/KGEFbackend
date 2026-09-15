@@ -4,7 +4,7 @@ import { getNextApplicationNumber } from "../models/Counter";
 import { applicantInputSchema } from "../utils/validation";
 import { sendApplicationConfirmationEmail } from "../utils/mailer";
 import { APPLICATION_CLOSE_DATE, isApplicationWindowClosed } from "../utils/applicationWindow";
-import { isQualifyingGrade, DISQUALIFICATION_REASON } from "../utils/preSelection";
+import { isQualifyingGrade, PRE_SELECTION_REJECTION_REASON } from "../utils/preSelection";
 import { deleteByCloudinaryUrl } from "../utils/cloudinaryUpload";
 
 export async function getApplicationWindow(_req: Request, res: Response) {
@@ -28,21 +28,22 @@ export async function createApplicant(req: Request, res: Response) {
 
   // Grade-based pre-selection happens immediately on submission: qualifying
   // applicants move straight to the pre-selected pool for admin review;
-  // everyone else is auto-disqualified and their already-uploaded documents
-  // are removed, since a disqualified application will never need them and
-  // there's no reason to keep paying to store them.
+  // everyone else is auto-rejected and their already-uploaded documents are
+  // removed, since a rejected application will never need them and there's
+  // no reason to keep paying to store them. "disqualified" is reserved for
+  // individual cases an admin flags manually during review.
   if (isQualifyingGrade(applicant.grade)) {
     applicant.status = "pre_selected";
   } else {
-    applicant.status = "disqualified";
-    applicant.decisionReason = DISQUALIFICATION_REASON;
+    applicant.status = "rejected";
+    applicant.decisionReason = PRE_SELECTION_REJECTION_REASON;
     const documents = applicant.documents ?? {};
     await Promise.all(
       Object.values(documents)
         .filter((url): url is string => Boolean(url))
         .map((url) =>
           deleteByCloudinaryUrl(url).catch((err) =>
-            console.error(`Failed to delete document for disqualified applicant ${applicant.applicationNumber}:`, err)
+            console.error(`Failed to delete document for rejected applicant ${applicant.applicationNumber}:`, err)
           )
         )
     );

@@ -17,7 +17,7 @@ import dotenv from "dotenv";
 import mongoose from "mongoose";
 import { v2 as cloudinary } from "cloudinary";
 import { Applicant } from "../src/models/Applicant";
-import { isQualifyingGrade, DISQUALIFICATION_REASON } from "../src/utils/preSelection";
+import { isQualifyingGrade, PRE_SELECTION_REJECTION_REASON } from "../src/utils/preSelection";
 
 dotenv.config({ path: path.resolve(__dirname, "../.env") });
 
@@ -251,14 +251,14 @@ async function disqualifyDb() {
       { _id: { $in: readyIds.map((id) => new mongoose.Types.ObjectId(id)) }, status: "pending" },
       {
         $set: {
-          status: "disqualified",
-          decisionReason: DISQUALIFICATION_REASON,
+          status: "rejected",
+          decisionReason: PRE_SELECTION_REJECTION_REASON,
           documents: {},
           documentVerification: {},
         },
       }
     );
-    console.log(`Disqualified ${result.modifiedCount} applicants with documents (all deletions confirmed).`);
+    console.log(`Rejected ${result.modifiedCount} applicants with documents (all deletions confirmed).`);
   }
 
   // Disqualifying applicants with no documents at all: anyone still "pending"
@@ -273,9 +273,9 @@ async function disqualifyDb() {
   if (noDocIds.length > 0) {
     const result = await Applicant.updateMany(
       { _id: { $in: noDocIds.map((id) => new mongoose.Types.ObjectId(id)) }, status: "pending" },
-      { $set: { status: "disqualified", decisionReason: DISQUALIFICATION_REASON, documents: {}, documentVerification: {} } }
+      { $set: { status: "rejected", decisionReason: PRE_SELECTION_REJECTION_REASON, documents: {}, documentVerification: {} } }
     );
-    console.log(`Disqualified ${result.modifiedCount} applicants with no documents to delete.`);
+    console.log(`Rejected ${result.modifiedCount} applicants with no documents to delete.`);
   }
 
   if (notReadyIds.size > 0) {
