@@ -1,5 +1,10 @@
 import { Request, Response } from "express";
-import { createUploadSignature, deleteByCloudinaryUrl, isCloudinaryConfigured } from "../utils/cloudinaryUpload";
+import {
+  createUploadSignature,
+  deleteByCloudinaryUrl,
+  getAuthenticatedViewUrl,
+  isCloudinaryConfigured,
+} from "../utils/cloudinaryUpload";
 
 const DOCUMENT_TYPES = new Set([
   "universityCertificate",
@@ -20,6 +25,20 @@ export async function getUploadSignature(req: Request, res: Response) {
   }
 
   res.json(createUploadSignature(documentType));
+}
+
+export async function getDocumentViewUrl(req: Request, res: Response) {
+  const { url } = req.body as { url?: string };
+  if (!url) {
+    return res.status(400).json({ message: "URL is required" });
+  }
+
+  try {
+    res.json({ viewUrl: getAuthenticatedViewUrl(url) });
+  } catch (err) {
+    console.error("Failed to build a document view URL:", err);
+    res.status(400).json({ message: "Couldn't generate a view link for this document." });
+  }
 }
 
 export async function deleteDocument(req: Request, res: Response) {

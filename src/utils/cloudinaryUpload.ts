@@ -57,3 +57,37 @@ export function deleteByCloudinaryUrl(url: string): Promise<void> {
     .uploader.destroy(publicId, { resource_type: resourceType })
     .then(() => undefined);
 }
+
+const CLOUDINARY_URL_PATTERN_WITH_FORMAT = /\/(image|video|raw)\/upload\/v\d+\/(.+)\.([a-zA-Z0-9]+)(?:\?.*)?$/;
+
+// Cloudinary blocks public/inline delivery of PDF (and ZIP) resources by
+// default as a security measure, so the plain stored URL 401s for those in
+// the admin document viewer. The authenticated Admin API download endpoint
+// isn't subject to that restriction, so admins view documents through a
+// short-lived signed link instead (see upload.controller.ts's viewUrl
+// route, which only admins can reach).
+export function getAuthenticatedViewUrl(url: string): string {
+  const match = url.match(CLOUDINARY_URL_PATTERN_WITH_FORMAT);
+  if (!match) {
+    throw new Error("Not a recognizable Cloudinary URL");
+  }
+  const [, resourceType, publicId, format] = match;
+  const cloudName = process.env.CLOUDINARY_CLOUD_NAME!;
+  const apiKey = process.env.CLOUDINARY_API_KEY!;
+  const apiSecret = process.env.CLOUDINARY_API_SECRET!;
+
+  const timestamp = Math.round(Date.now() / 1000);
+  const signature = getCloudinary().utils.api_sign_request(
+    { timestamp, public_id: publicId, format, type: "upload" },
+    apiSecret
+  );
+  const query = new URLSearchParams({
+    timestamp: String(timestamp),
+    public_id: publicId,
+    format,
+    type: "upload",
+    signature,
+    api_key: apiKey,
+  });
+  return `https://api.cloudinary.com/v1_1/${cloudName}/${resourceType}/download?${query.toString()}`;
+}
