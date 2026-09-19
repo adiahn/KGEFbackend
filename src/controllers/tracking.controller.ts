@@ -4,10 +4,20 @@ import { Applicant } from "../models/Applicant";
 import { Otp } from "../models/Otp";
 import { generateOtpCode, hashOtpCode, maskEmail } from "../utils/otp";
 import { sendOtpEmail } from "../utils/mailer";
+import { isQualifyingGrade, PRE_SELECTION_REJECTION_REASON } from "../utils/preSelection";
 
 const OTP_TTL_MS = 10 * 60 * 1000;
 const RESEND_COOLDOWN_MS = 60 * 1000;
 const MAX_ATTEMPTS = 5;
+
+const DOCUMENT_FIELDS = [
+  "universityCertificate",
+  "kasedaCertificate",
+  "cacCertificate",
+  "cacStatusReport",
+  "lgaIndigeneLetter",
+] as const;
+type DocumentField = (typeof DOCUMENT_FIELDS)[number];
 
 export async function requestOtp(req: Request, res: Response) {
   const { applicationNumber } = req.body as { applicationNumber?: string };
@@ -108,7 +118,53 @@ export async function getMe(req: Request, res: Response) {
     requestedAmount: applicant.requestedAmount,
     status: applicant.status,
     decisionReason: applicant.decisionReason,
+    documents: applicant.documents,
     createdAt: applicant.createdAt,
     updatedAt: applicant.updatedAt,
+  });
+}
+
+// Lets an applicant who was reset to "pending" for having no documents (see
+// scripts/ and the pre-selection sweep) come back and finish their
+// application without re-entering any of the rest of their form data. Once
+// all 5 documents are present, the same grade-based pre-selection rule used
+// at initial submission runs again, so the record rejoins the normal
+// pipeline instead of needing a manual admin nudge.
+export async function submitDocuments(req: Request, res: Response) {
+  const { documents } = req.body as { documents?: Partial<Record<DocumentField, string>> };
+  if (!documents || typeof documents !== "object") {
+    return res.status(400).json({ message: "Documents are required" });
+  }
+
+  const applicant = await Applicant.findOne({ applicationNumber: req.tracking?.applicationNumber });
+  if (!applicant) {
+    return res.status(404).json({ message: "Application not found" });
+  }
+
+  for (const field of DOCUMENT_FIELDS) {
+    const url = documents[field];
+    if (typeof url === "string" && /^https:\/\//.test(url)) {
+      applicant.documents = { ...applicant.documents, [field]: url };
+    }
+  }
+
+  const allPresent = DOCUMENT_FIELDS.every((field) => applicant.documents?.[field]);
+  if (allPresent) {
+    if (isQualifyingGrade(applicant.grade)) {
+      applicant.status = "pre_selected";
+      applicant.decisionReason = undefined;
+    } else {
+      applicant.status = "rejected";
+      applicant.decisionReason = PRE_SELECTION_REJECTION_REASON;
+    }
+  }
+
+  await applicant.save();
+
+  res.json({
+    applicationNumber: applicant.applicationNumber,
+    status: applicant.status,
+    decisionReason: applicant.decisionReason,
+    documents: applicant.documents,
   });
 }
