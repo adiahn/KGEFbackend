@@ -3,7 +3,7 @@
 // admins only need to review the pre-selected pool. "disqualified" is a
 // separate, manually-assigned status for individual cases an admin flags
 // during review — it's not used by this automatic grade filter.
-export const QUALIFYING_GRADES = ["First Class", "Distinction", "Second Class Upper", "Merit"];
+export const QUALIFYING_GRADES = ["First Class", "Distinction", "Second Class Upper", "Merit", "Credit"];
 
 export function isQualifyingGrade(grade: string): boolean {
   return QUALIFYING_GRADES.includes(grade);
