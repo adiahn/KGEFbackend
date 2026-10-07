@@ -148,8 +148,13 @@ export async function submitDocuments(req: Request, res: Response) {
     }
   }
 
+  // Only re-run grade-based classification for applicants still sitting at
+  // "pending" (the no-documents-at-all case this was built for). Anyone
+  // already further along — e.g. under_review applicants missing a single
+  // document — should just have that document filled in without their
+  // status being touched.
   const allPresent = DOCUMENT_FIELDS.every((field) => applicant.documents?.[field]);
-  if (allPresent) {
+  if (allPresent && applicant.status === "pending") {
     if (isQualifyingGrade(applicant.grade)) {
       applicant.status = "pre_selected";
       applicant.decisionReason = undefined;
