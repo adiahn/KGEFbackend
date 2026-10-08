@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import { Applicant } from "../models/Applicant";
 import { getNextApplicationNumber } from "../models/Counter";
 import { applicantInputSchema } from "../utils/validation";
-import { sendApplicationConfirmationEmail } from "../utils/mailer";
+import { sendApplicationConfirmationEmail, sendMissingStatusReportEmail } from "../utils/mailer";
 import { APPLICATION_CLOSE_DATE, isApplicationWindowClosed } from "../utils/applicationWindow";
 import { isQualifyingGrade, PRE_SELECTION_REJECTION_REASON } from "../utils/preSelection";
 import { deleteByCloudinaryUrl } from "../utils/cloudinaryUpload";
@@ -158,6 +158,11 @@ export async function updateApplicantStatus(req: Request, res: Response) {
     return res.status(400).json({ message: "Invalid grade value" });
   }
 
+  const existing = await Applicant.findById(req.params.id);
+  if (!existing) {
+    return res.status(404).json({ message: "Applicant not found" });
+  }
+
   const update: Record<string, unknown> = {};
   if (status) update.status = status;
   if (score !== undefined) update.score = score;
@@ -176,6 +181,27 @@ export async function updateApplicantStatus(req: Request, res: Response) {
   if (!applicant) {
     return res.status(404).json({ message: "Applicant not found" });
   }
+
+  // When an applicant first lands in under_review without a CAC Status
+  // Report, email them instructions to upload it via the tracking dashboard.
+  // Skip if they were already under_review (notes/score-only saves) or if
+  // the report is already on file.
+  const movedToUnderReview = status === "under_review" && existing.status !== "under_review";
+  if (movedToUnderReview && !applicant.documents?.cacStatusReport) {
+    try {
+      await sendMissingStatusReportEmail({
+        email: applicant.email,
+        fullName: applicant.fullName,
+        applicationNumber: applicant.applicationNumber,
+      });
+    } catch (err) {
+      console.error(
+        `Failed to send missing-status-report email for ${applicant.applicationNumber}:`,
+        err
+      );
+    }
+  }
+
   res.json(applicant);
 }
 

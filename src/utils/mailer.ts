@@ -21,6 +21,12 @@ function getTransporter(): nodemailer.Transporter | null {
   return transporter;
 }
 
+/** Visible From address. Prefer SMTP_FROM (the mailbox configured on Vercel) over the auth user. */
+function getFromAddress(): string {
+  const address = (process.env.SMTP_FROM || process.env.SMTP_USER || "").trim();
+  return `"KGEF Graduate Start-Up Capital Fund" <${address}>`;
+}
+
 function formatDate(date: Date): string {
   return date.toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" });
 }
@@ -113,7 +119,7 @@ function buildEmail(applicant: IApplicant) {
     <p style="color:#ffffff;font-size:18px;font-weight:700;margin:12px 0 0;">Application Received</p>
   </div>
   <div style="padding:32px;border:1px solid #e2e8f0;border-top:none;">
-    <p style="color:#0f172a;font-size:15px;margin:0 0 16px;">Hello ${applicant.fullName},</p>
+    <p style="color:#0f172a;font-size:15px;margin:0 0 16px;">Hello ${applicant.fullName?.trim() || "Applicant"},</p>
     <p style="color:#334155;font-size:14px;line-height:1.6;margin:0 0 24px;">
       Thank you for applying to the KGEF Graduate Start-up Capital Fund. We've received your application
       and it is now pending review.
@@ -138,7 +144,7 @@ function buildEmail(applicant: IApplicant) {
   </div>
 </div>`.trim();
 
-  const text = `Hello ${applicant.fullName},
+  const text = `Hello ${applicant.fullName?.trim() || "Applicant"},
 
 Thank you for applying to the KGEF Graduate Start-up Capital Fund. We've received your application and it is now pending review.
 
@@ -161,7 +167,7 @@ export async function sendApplicationConfirmationEmail(applicant: IApplicant): P
   const { html, text } = buildEmail(applicant);
 
   await client.sendMail({
-    from: `"KGEF Graduate Start-Up Capital Fund" <${process.env.SMTP_USER}>`,
+    from: getFromAddress(),
     to: applicant.email,
     subject: `Application Received: ${applicant.applicationNumber}`,
     text,
@@ -180,6 +186,8 @@ export async function sendOtpEmail(params: {
     throw new Error("Email service is not configured, cannot send verification code.");
   }
 
+  const greetingName = params.fullName?.trim() || "Applicant";
+
   const html = `
 <div style="font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;max-width:480px;margin:0 auto;background:#ffffff;">
   <div style="background:#065f46;padding:24px 32px;">
@@ -187,7 +195,7 @@ export async function sendOtpEmail(params: {
     <p style="color:#ffffff;font-size:18px;font-weight:700;margin:12px 0 0;">Your Verification Code</p>
   </div>
   <div style="padding:32px;border:1px solid #e2e8f0;border-top:none;">
-    <p style="color:#0f172a;font-size:15px;margin:0 0 16px;">Hello ${params.fullName},</p>
+    <p style="color:#0f172a;font-size:15px;margin:0 0 16px;">Hello ${greetingName},</p>
     <p style="color:#334155;font-size:14px;line-height:1.6;margin:0 0 24px;">
       Use the code below to access the status of application <strong>${params.applicationNumber}</strong>.
       This code expires in 10 minutes.
@@ -204,7 +212,7 @@ export async function sendOtpEmail(params: {
   </div>
 </div>`.trim();
 
-  const text = `Hello ${params.fullName},
+  const text = `Hello ${greetingName},
 
 Use the code below to access the status of application ${params.applicationNumber}. This code expires in 10 minutes.
 
@@ -215,9 +223,73 @@ If you didn't request this code, you can safely ignore this email.
 KGEF Graduate Start-Up Capital Fund, funded and administered by KASEDA`;
 
   await client.sendMail({
-    from: `"KGEF Graduate Start-Up Capital Fund" <${process.env.SMTP_USER}>`,
+    from: getFromAddress(),
     to: params.email,
     subject: `Your KGEF verification code: ${params.code}`,
+    text,
+    html,
+  });
+}
+
+/**
+ * Sent when an applicant is moved to under_review but their CAC Status
+ * Report is still missing. Kept close to the OTP / confirmation template
+ * on purpose — Namecheap's outbound filter (Jellyfish) discards mail that
+ * looks like phishing ("Action needed", cold URLs, sparse test bodies).
+ */
+export async function sendMissingStatusReportEmail(params: {
+  email: string;
+  fullName: string;
+  applicationNumber: string;
+}): Promise<void> {
+  const client = getTransporter();
+  if (!client) {
+    console.warn("SMTP not configured, skipping missing-status-report email.");
+    return;
+  }
+
+  const greetingName = params.fullName?.trim() || "Applicant";
+
+  const html = `
+<div style="font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;max-width:480px;margin:0 auto;background:#ffffff;">
+  <div style="background:#065f46;padding:24px 32px;">
+    <span style="display:inline-block;background:#047857;color:#ffffff;font-weight:700;font-size:13px;padding:6px 10px;border-radius:5px;">KGEF</span>
+    <p style="color:#ffffff;font-size:18px;font-weight:700;margin:12px 0 0;">Document Update for Your Application</p>
+  </div>
+  <div style="padding:32px;border:1px solid #e2e8f0;border-top:none;">
+    <p style="color:#0f172a;font-size:15px;margin:0 0 16px;">Hello ${greetingName},</p>
+    <p style="color:#334155;font-size:14px;line-height:1.6;margin:0 0 16px;">
+      Your application <strong>${params.applicationNumber}</strong> is now under review.
+      To complete your file, please upload your <strong>CAC Status Report</strong>.
+    </p>
+    <p style="color:#334155;font-size:14px;line-height:1.6;margin:0 0 16px;">
+      On the KGEF website, open Track Your Application, enter your application
+      number, verify with the code we email you, then upload the status report
+      from your dashboard. Each upload saves immediately.
+    </p>
+    <p style="color:#64748b;font-size:13px;line-height:1.6;margin:0;">
+      If you have already uploaded the CAC Status Report, you can ignore this email.
+    </p>
+  </div>
+  <div style="padding:20px 32px;text-align:center;">
+    <p style="color:#94a3b8;font-size:12px;margin:0;">KGEF Graduate Start-Up Capital Fund, funded and administered by KASEDA</p>
+  </div>
+</div>`.trim();
+
+  const text = `Hello ${greetingName},
+
+Your application ${params.applicationNumber} is now under review. To complete your file, please upload your CAC Status Report.
+
+On the KGEF website, open Track Your Application, enter your application number, verify with the code we email you, then upload the status report from your dashboard. Each upload saves immediately.
+
+If you have already uploaded the CAC Status Report, you can ignore this email.
+
+KGEF Graduate Start-Up Capital Fund, funded and administered by KASEDA`;
+
+  await client.sendMail({
+    from: getFromAddress(),
+    to: params.email,
+    subject: `KGEF document update for ${params.applicationNumber}`,
     text,
     html,
   });

@@ -14,7 +14,9 @@
     "preselect:classify": "tsx scripts/preSelectApplicants.ts classify",
     "preselect:promote": "tsx scripts/preSelectApplicants.ts promote",
     "preselect:delete-docs": "tsx scripts/preSelectApplicants.ts delete-docs",
-    "preselect:disqualify-db": "tsx scripts/preSelectApplicants.ts disqualify-db"
+    "preselect:disqualify-db": "tsx scripts/preSelectApplicants.ts disqualify-db",
+    "email:status-report:dry-run": "tsx scripts/emailMissingStatusReport.ts dry-run",
+    "email:status-report:send": "tsx scripts/emailMissingStatusReport.ts send"
   },
   "dependencies": {
     "cloudinary": "^2.10.0",

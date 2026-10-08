@@ -58,7 +58,10 @@ export async function requestOtp(req: Request, res: Response) {
     code,
   });
 
-  res.json({ maskedEmail: maskEmail(applicant.email) });
+  res.json({
+    maskedEmail: maskEmail(applicant.email),
+    fullName: applicant.fullName,
+  });
 }
 
 export async function verifyOtp(req: Request, res: Response) {
@@ -166,10 +169,18 @@ export async function submitDocuments(req: Request, res: Response) {
 
   await applicant.save();
 
+  // Same shape as getMe so the dashboard can replace its state after an
+  // upload without dropping fullName / email / etc.
   res.json({
     applicationNumber: applicant.applicationNumber,
+    fullName: applicant.fullName,
+    email: applicant.email,
+    businessSector: applicant.businessSector,
+    requestedAmount: applicant.requestedAmount,
     status: applicant.status,
     decisionReason: applicant.decisionReason,
     documents: applicant.documents,
+    createdAt: applicant.createdAt,
+    updatedAt: applicant.updatedAt,
   });
 }

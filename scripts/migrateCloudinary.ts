@@ -181,11 +181,41 @@ function configureDestinationCloudinary() {
   });
 }
 
+// Cloudinary blocks public/inline delivery of PDF (and ZIP) resources by
+// default as a security measure, so fetching entry.url directly 401s for
+// those. The authenticated Admin API download endpoint isn't subject to
+// that restriction, so we sign a request for it with the OLD account's own
+// credentials (not the globally-configured destination account) and use
+// that as the fetch source instead. Signing here is a pure function of
+// (params, secret) with no reliance on cloudinary.config() state, so it's
+// safe to call from multiple concurrent workers alongside the destination
+// upload calls below, which do use the global (NEW account) config.
+function buildAuthenticatedSourceUrl(entry: ManifestEntry): string {
+  const oldCloudName = requireEnv("OLD_CLOUDINARY_CLOUD_NAME");
+  const oldApiKey = requireEnv("OLD_CLOUDINARY_API_KEY");
+  const oldApiSecret = requireEnv("OLD_CLOUDINARY_API_SECRET");
+  const format = entry.url.split(".").pop()!.split("?")[0];
+  const timestamp = Math.round(Date.now() / 1000);
+  const signature = cloudinary.utils.api_sign_request(
+    { timestamp, public_id: entry.publicId, format, type: "upload" },
+    oldApiSecret
+  );
+  const query = new URLSearchParams({
+    timestamp: String(timestamp),
+    public_id: entry.publicId,
+    format,
+    type: "upload",
+    signature,
+    api_key: oldApiKey,
+  });
+  return `https://api.cloudinary.com/v1_1/${oldCloudName}/${entry.resourceType}/download?${query.toString()}`;
+}
+
 async function migrateOne(entry: ManifestEntry, log: LogMap): Promise<void> {
   const attempts = (log[entry.url]?.attempts ?? 0) + 1;
 
   try {
-    const result = await cloudinary.uploader.upload(entry.url, {
+    const result = await cloudinary.uploader.upload(buildAuthenticatedSourceUrl(entry), {
       public_id: entry.publicId,
       resource_type: entry.resourceType,
       overwrite: false,
