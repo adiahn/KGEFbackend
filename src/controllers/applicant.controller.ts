@@ -106,6 +106,7 @@ export async function getApplicantCounts(_req: Request, res: Response) {
     pre_selected: 0,
     disqualified: 0,
     under_review: 0,
+    documents_resubmitted: 0,
     approved: 0,
     rejected: 0,
     total: 0,
@@ -147,7 +148,15 @@ const ALLOWED_GRADES = [
 
 export async function updateApplicantStatus(req: Request, res: Response) {
   const { status, score, reviewNotes, decisionReason, grade, documentVerification } = req.body;
-  const allowedStatuses = ["pending", "pre_selected", "disqualified", "under_review", "approved", "rejected"];
+  const allowedStatuses = [
+    "pending",
+    "pre_selected",
+    "disqualified",
+    "under_review",
+    "documents_resubmitted",
+    "approved",
+    "rejected",
+  ];
   if (status && !allowedStatuses.includes(status)) {
     return res.status(400).json({ message: "Invalid status value" });
   }

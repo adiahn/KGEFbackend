@@ -310,3 +310,98 @@ KGEF Graduate Start-Up Capital Fund, funded and administered by KASEDA`;
     html,
   });
 }
+
+/**
+ * Asks an under_review applicant to log in, read the reviewer comment on
+ * their dashboard, and upload only the document(s) named in that comment.
+ */
+export async function sendDocumentResubmissionEmail(params: {
+  email: string;
+  fullName: string;
+  applicationNumber: string;
+  reviewNotes?: string;
+}): Promise<void> {
+  const client = getTransporter();
+  if (!client) {
+    console.warn("SMTP not configured, skipping document-resubmission email.");
+    return;
+  }
+
+  const greetingName = params.fullName?.trim() || "Applicant";
+  const trackUrl = getPublicSiteUrl();
+  const comment = params.reviewNotes?.trim();
+
+  const commentHtml = comment
+    ? `
+    <p style="color:#334155;font-size:14px;line-height:1.6;margin:0 0 8px;">
+      Please read this note from the review team carefully:
+    </p>
+    <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:5px;padding:14px 16px;margin:0 0 20px;">
+      <p style="color:#0f172a;font-size:14px;line-height:1.6;margin:0;white-space:pre-wrap;">${comment.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</p>
+    </div>`
+    : `
+    <p style="color:#334155;font-size:14px;line-height:1.6;margin:0 0 20px;">
+      After you sign in, read the reviewer comment on your dashboard and upload
+      <strong>only</strong> the document(s) they asked for.
+    </p>`;
+
+  const commentText = comment
+    ? `Please read this note from the review team carefully:\n\n${comment}\n`
+    : `After you sign in, read the reviewer comment on your dashboard and upload only the document(s) they asked for.\n`;
+
+  const html = `
+<div style="font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;max-width:480px;margin:0 auto;background:#ffffff;">
+  <div style="background:#065f46;padding:24px 32px;">
+    <span style="display:inline-block;background:#047857;color:#ffffff;font-weight:700;font-size:13px;padding:6px 10px;border-radius:5px;">KGEF</span>
+    <p style="color:#ffffff;font-size:18px;font-weight:700;margin:12px 0 0;">Document Update for Your Application</p>
+  </div>
+  <div style="padding:32px;border:1px solid #e2e8f0;border-top:none;">
+    <p style="color:#0f172a;font-size:15px;margin:0 0 16px;">Hello ${greetingName},</p>
+    <p style="color:#334155;font-size:14px;line-height:1.6;margin:0 0 16px;">
+      Your application <strong>${params.applicationNumber}</strong> is under review.
+      The review team needs an updated document from you before they can continue.
+    </p>
+    ${commentHtml}
+    <p style="color:#334155;font-size:14px;line-height:1.6;margin:0 0 20px;">
+      Use the link below, enter your application number under Track Your Application,
+      verify with the code we email you, then upload <strong>only</strong> the
+      requested document from your dashboard. Each upload saves immediately.
+    </p>
+    <p style="text-align:center;margin:0 0 20px;">
+      <a href="${trackUrl}" style="display:inline-block;background:#065f46;color:#ffffff;font-size:14px;font-weight:700;text-decoration:none;padding:12px 20px;border-radius:5px;">
+        Open your application dashboard
+      </a>
+    </p>
+    <p style="color:#64748b;font-size:13px;line-height:1.6;margin:0 0 8px;">
+      Or paste this link into your browser:<br>
+      <a href="${trackUrl}" style="color:#065f46;word-break:break-all;">${trackUrl}</a>
+    </p>
+    <p style="color:#64748b;font-size:13px;line-height:1.6;margin:0;">
+      If you have already uploaded the requested document, you can ignore this email.
+    </p>
+  </div>
+  <div style="padding:20px 32px;text-align:center;">
+    <p style="color:#94a3b8;font-size:12px;margin:0;">KGEF Graduate Start-Up Capital Fund, funded and administered by KASEDA</p>
+  </div>
+</div>`.trim();
+
+  const text = `Hello ${greetingName},
+
+Your application ${params.applicationNumber} is under review. The review team needs an updated document from you before they can continue.
+
+${commentText}
+Open this link, enter your application number under Track Your Application, verify with the code we email you, then upload only the requested document from your dashboard:
+${trackUrl}
+
+If you have already uploaded the requested document, you can ignore this email.
+
+KGEF Graduate Start-Up Capital Fund, funded and administered by KASEDA`;
+
+  await client.sendMail({
+    from: getFromAddress(),
+    to: params.email,
+    subject: `KGEF document update for ${params.applicationNumber}`,
+    text,
+    html,
+  });
+}

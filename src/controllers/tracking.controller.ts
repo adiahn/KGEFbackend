@@ -163,7 +163,8 @@ export async function submitDocuments(req: Request, res: Response) {
   // "pending" (the no-documents-at-all case this was built for). Anyone
   // already further along — e.g. under_review applicants missing a single
   // document — should just have that document filled in without their
-  // status being touched.
+  // status being touched, except we move under_review → documents_resubmitted
+  // so admins can pick up the re-review queue.
   const allPresent = DOCUMENT_FIELDS.every((field) => applicant.documents?.[field]);
   if (allPresent && applicant.status === "pending") {
     if (isQualifyingGrade(applicant.grade)) {
@@ -173,6 +174,8 @@ export async function submitDocuments(req: Request, res: Response) {
       applicant.status = "rejected";
       applicant.decisionReason = PRE_SELECTION_REJECTION_REASON;
     }
+  } else if (applicant.status === "under_review") {
+    applicant.status = "documents_resubmitted";
   }
 
   // validateModifiedOnly: document resubmission must not fail because an
