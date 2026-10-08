@@ -33,7 +33,7 @@ export const applicantInputSchema = z.object({
   nin: z.string().min(1),
   bvn: z.string().min(1),
   cacCertificateNumber: z.string().optional(),
-  tin: z.string().min(1),
+  tin: z.string().optional().default(""),
 
   businessSector: z.enum([
     "Agribusiness (crop farming, livestock, fisheries)",

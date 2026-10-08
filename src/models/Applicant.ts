@@ -227,7 +227,7 @@ const applicantSchema = new Schema<IApplicant>(
     nin: { type: String, required: true, trim: true },
     bvn: { type: String, required: true, trim: true },
     cacCertificateNumber: { type: String, trim: true },
-    tin: { type: String, required: true, trim: true },
+    tin: { type: String, trim: true },
 
     documents: {
       universityCertificate: { type: String },

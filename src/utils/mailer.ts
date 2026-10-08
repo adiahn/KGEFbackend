@@ -231,6 +231,11 @@ KGEF Graduate Start-Up Capital Fund, funded and administered by KASEDA`;
   });
 }
 
+function getPublicSiteUrl(): string {
+  const fromEnv = process.env.CLIENT_ORIGIN?.split(",")[0]?.trim();
+  return (fromEnv || "https://kgef.kasedaktsg.com").replace(/\/$/, "");
+}
+
 /**
  * Sent when an applicant is moved to under_review but their CAC Status
  * Report is still missing. Kept close to the OTP / confirmation template
@@ -249,6 +254,7 @@ export async function sendMissingStatusReportEmail(params: {
   }
 
   const greetingName = params.fullName?.trim() || "Applicant";
+  const trackUrl = getPublicSiteUrl();
 
   const html = `
 <div style="font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;max-width:480px;margin:0 auto;background:#ffffff;">
@@ -262,10 +268,19 @@ export async function sendMissingStatusReportEmail(params: {
       Your application <strong>${params.applicationNumber}</strong> is now under review.
       To complete your file, please upload your <strong>CAC Status Report</strong>.
     </p>
-    <p style="color:#334155;font-size:14px;line-height:1.6;margin:0 0 16px;">
-      On the KGEF website, open Track Your Application, enter your application
-      number, verify with the code we email you, then upload the status report
-      from your dashboard. Each upload saves immediately.
+    <p style="color:#334155;font-size:14px;line-height:1.6;margin:0 0 20px;">
+      Use the link below, enter your application number under Track Your Application,
+      verify with the code we email you, then upload the status report from your
+      dashboard. Each upload saves immediately.
+    </p>
+    <p style="text-align:center;margin:0 0 20px;">
+      <a href="${trackUrl}" style="display:inline-block;background:#065f46;color:#ffffff;font-size:14px;font-weight:700;text-decoration:none;padding:12px 20px;border-radius:5px;">
+        Upload your CAC Status Report
+      </a>
+    </p>
+    <p style="color:#64748b;font-size:13px;line-height:1.6;margin:0 0 8px;">
+      Or paste this link into your browser:<br>
+      <a href="${trackUrl}" style="color:#065f46;word-break:break-all;">${trackUrl}</a>
     </p>
     <p style="color:#64748b;font-size:13px;line-height:1.6;margin:0;">
       If you have already uploaded the CAC Status Report, you can ignore this email.
@@ -280,7 +295,8 @@ export async function sendMissingStatusReportEmail(params: {
 
 Your application ${params.applicationNumber} is now under review. To complete your file, please upload your CAC Status Report.
 
-On the KGEF website, open Track Your Application, enter your application number, verify with the code we email you, then upload the status report from your dashboard. Each upload saves immediately.
+Open this link, enter your application number under Track Your Application, verify with the code we email you, then upload the status report from your dashboard:
+${trackUrl}
 
 If you have already uploaded the CAC Status Report, you can ignore this email.
 

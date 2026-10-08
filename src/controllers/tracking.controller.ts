@@ -167,7 +167,10 @@ export async function submitDocuments(req: Request, res: Response) {
     }
   }
 
-  await applicant.save();
+  // validateModifiedOnly: document resubmission must not fail because an
+  // unrelated legacy field (e.g. empty TIN) is still marked required on the
+  // full schema — applicants only need to attach the missing file(s).
+  await applicant.save({ validateModifiedOnly: true });
 
   // Same shape as getMe so the dashboard can replace its state after an
   // upload without dropping fullName / email / etc.
