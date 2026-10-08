@@ -117,13 +117,17 @@ export async function getMe(req: Request, res: Response) {
 }
 
 function toDashboardPayload(applicant: InstanceType<typeof Applicant>) {
-  // Final outcomes (approved / rejected / disqualified) are not disclosed to
-  // applicants yet — surface as under_review with no decisionReason, and do
-  // not open the document upload UI for those records.
+  // Applicants only see under_review (or pending / documents_resubmitted).
+  // Pre-selected and final outcomes are never disclosed by name.
   const rawStatus = applicant.status;
-  const hideOutcome =
-    rawStatus === "approved" || rawStatus === "rejected" || rawStatus === "disqualified";
-  const publicStatus = hideOutcome ? ("under_review" as const) : rawStatus;
+  const showAsUnderReview =
+    rawStatus === "pre_selected" ||
+    rawStatus === "approved" ||
+    rawStatus === "rejected" ||
+    rawStatus === "disqualified";
+  const publicStatus = showAsUnderReview ? ("under_review" as const) : rawStatus;
+  // Only pending (missing docs) and under_review / documents_resubmitted
+  // may upload. Pre-selected / final outcomes get a neutral overview only.
   const allowDocumentUpload =
     rawStatus === "pending" ||
     rawStatus === "under_review" ||
@@ -137,7 +141,7 @@ function toDashboardPayload(applicant: InstanceType<typeof Applicant>) {
     requestedAmount: applicant.requestedAmount,
     status: publicStatus,
     allowDocumentUpload,
-    // Only expose reviewer notes while the applicant still needs to act on them.
+    // Reviewer comment: shown so under_review applicants know which file(s) to attach.
     reviewNotes: allowDocumentUpload && rawStatus !== "pending" ? applicant.reviewNotes : undefined,
     documents: applicant.documents,
     createdAt: applicant.createdAt,
