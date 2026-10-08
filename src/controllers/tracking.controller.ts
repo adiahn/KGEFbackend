@@ -113,7 +113,11 @@ export async function getMe(req: Request, res: Response) {
     return res.status(404).json({ message: "Application not found" });
   }
 
-  res.json({
+  res.json(toDashboardPayload(applicant));
+}
+
+function toDashboardPayload(applicant: InstanceType<typeof Applicant>) {
+  return {
     applicationNumber: applicant.applicationNumber,
     fullName: applicant.fullName,
     email: applicant.email,
@@ -121,10 +125,12 @@ export async function getMe(req: Request, res: Response) {
     requestedAmount: applicant.requestedAmount,
     status: applicant.status,
     decisionReason: applicant.decisionReason,
+    // Shown to under_review applicants so they know which document(s) to attach.
+    reviewNotes: applicant.reviewNotes,
     documents: applicant.documents,
     createdAt: applicant.createdAt,
     updatedAt: applicant.updatedAt,
-  });
+  };
 }
 
 // Lets an applicant who was reset to "pending" for having no documents (see
@@ -133,6 +139,8 @@ export async function getMe(req: Request, res: Response) {
 // all 5 documents are present, the same grade-based pre-selection rule used
 // at initial submission runs again, so the record rejoins the normal
 // pipeline instead of needing a manual admin nudge.
+// Under-review applicants may also replace any document called out in
+// reviewNotes without their status being changed.
 export async function submitDocuments(req: Request, res: Response) {
   const { documents } = req.body as { documents?: Partial<Record<DocumentField, string>> };
   if (!documents || typeof documents !== "object") {
@@ -174,16 +182,5 @@ export async function submitDocuments(req: Request, res: Response) {
 
   // Same shape as getMe so the dashboard can replace its state after an
   // upload without dropping fullName / email / etc.
-  res.json({
-    applicationNumber: applicant.applicationNumber,
-    fullName: applicant.fullName,
-    email: applicant.email,
-    businessSector: applicant.businessSector,
-    requestedAmount: applicant.requestedAmount,
-    status: applicant.status,
-    decisionReason: applicant.decisionReason,
-    documents: applicant.documents,
-    createdAt: applicant.createdAt,
-    updatedAt: applicant.updatedAt,
-  });
+  res.json(toDashboardPayload(applicant));
 }
