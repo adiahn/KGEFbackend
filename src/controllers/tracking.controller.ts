@@ -117,16 +117,28 @@ export async function getMe(req: Request, res: Response) {
 }
 
 function toDashboardPayload(applicant: InstanceType<typeof Applicant>) {
+  // Final outcomes (approved / rejected / disqualified) are not disclosed to
+  // applicants yet — surface as under_review with no decisionReason, and do
+  // not open the document upload UI for those records.
+  const rawStatus = applicant.status;
+  const hideOutcome =
+    rawStatus === "approved" || rawStatus === "rejected" || rawStatus === "disqualified";
+  const publicStatus = hideOutcome ? ("under_review" as const) : rawStatus;
+  const allowDocumentUpload =
+    rawStatus === "pending" ||
+    rawStatus === "under_review" ||
+    rawStatus === "documents_resubmitted";
+
   return {
     applicationNumber: applicant.applicationNumber,
     fullName: applicant.fullName,
     email: applicant.email,
     businessSector: applicant.businessSector,
     requestedAmount: applicant.requestedAmount,
-    status: applicant.status,
-    decisionReason: applicant.decisionReason,
-    // Shown to under_review applicants so they know which document(s) to attach.
-    reviewNotes: applicant.reviewNotes,
+    status: publicStatus,
+    allowDocumentUpload,
+    // Only expose reviewer notes while the applicant still needs to act on them.
+    reviewNotes: allowDocumentUpload && rawStatus !== "pending" ? applicant.reviewNotes : undefined,
     documents: applicant.documents,
     createdAt: applicant.createdAt,
     updatedAt: applicant.updatedAt,
@@ -150,6 +162,16 @@ export async function submitDocuments(req: Request, res: Response) {
   const applicant = await Applicant.findOne({ applicationNumber: req.tracking?.applicationNumber });
   if (!applicant) {
     return res.status(404).json({ message: "Application not found" });
+  }
+
+  // Rejected / approved / disqualified applicants must not be able to change
+  // documents while outcomes are hidden from the tracking dashboard.
+  if (
+    applicant.status !== "pending" &&
+    applicant.status !== "under_review" &&
+    applicant.status !== "documents_resubmitted"
+  ) {
+    return res.status(403).json({ message: "Document upload is not available for this application" });
   }
 
   for (const field of DOCUMENT_FIELDS) {
